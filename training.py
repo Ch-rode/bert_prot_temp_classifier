@@ -252,6 +252,7 @@ def evaluate(model, val_dataloader,device):
 
     # For each batch in our validation set...
     for batch in val_dataloader:
+        logging.info('Batch size for evaluation {}'.format(len(batch)))
         # Load batch to GPU
         b_input_ids, b_attn_mask, b_labels = tuple(t.to(device) for t in batch)
 

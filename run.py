@@ -32,10 +32,12 @@ def run(*argv):
     parser.add_argument("--learning_rate", help="Specify if working with Mesophilic/Thermophilic", type=float)
     parser.add_argument("--batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
     parser.add_argument("--start_epochs", help="Specify if working with Mesophilic/Thermophilic", type=int)
+
     parser.add_argument("--adapter", help="Specify if working with Mesophilic/Thermophilic", type=str)
-
-
     parser.add_argument("--train_first_run", help="Specify if working with Mesophilic/Thermophilic", type=str)
+
+    # test mode
+    parser.add_argument("--test_batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
 
 
     # inference mode
@@ -132,11 +134,12 @@ def run(*argv):
         device = args.device
         num_workers = args.num_workers
         adapter = args.adapter
+        test_batch_size=args.test_batch_size
         
         if adapter == True:
-            test(test_data,num_workers,device,MAX_LEN,lr,adapter=True)
+            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,adapter=True,)
         else:
-            test(test_data,num_workers,device,MAX_LEN,lr)
+            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size)
 
 
 

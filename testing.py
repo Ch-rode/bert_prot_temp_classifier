@@ -4,7 +4,7 @@ from model import *
 from training import *
 
 
-def test(test_data,num_workers,device,MAX_LEN,lr,adapter=None):
+def test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,adapter=None):
     """Evaluate the Bert classifier on Test set"""
     logging.info('--Evaluation on the TEST SET')
 
@@ -49,7 +49,7 @@ def test(test_data,num_workers,device,MAX_LEN,lr,adapter=None):
     # Create the DataLoader for our test set
     test_dataset = TensorDataset(test_inputs, test_masks,test_labels)
     test_sampler = SequentialSampler(test_dataset)
-    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=32,  num_workers = num_workers)
+    test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=test_batch_size,  num_workers = num_workers)
 
 
     val_loss, val_accuracy = evaluate(model, test_dataloader,device)
