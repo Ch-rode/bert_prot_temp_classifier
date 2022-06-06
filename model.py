@@ -45,21 +45,21 @@ def preprocessing_for_bert(data,MAX_LEN):
 
     return input_ids, attention_masks
 
-#Create the BertClassfier class
-class BertClassifier(nn.Module):
+class BertClassifier(PreTrainedModel):
     """Bert Model for Classification Tasks."""
-    def __init__(self, freeze_bert=True): #tuning only the head
+    config_class = AutoConfig
+    def __init__(self,config=AutoConfig.from_pretrained("Rostlab/prot_bert_bfd"), freeze_bert=True): #tuning only the head
         """
          @param    bert: a BertModel object
          @param    classifier: a torch.nn.Module classifier
          @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
         """
-        super(BertClassifier, self).__init__()
+        #super(BertClassifier, self).__init__()
+        super().__init__(config)
 
         # Instantiate BERT model
         # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        #configuration = AutoConfig.from_pretrained("Rostlab/prot_bert_bfd")
-        self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd')
+        self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
         self.D_in = 1024 #hidden size of Bert
         self.H = 512
         self.D_out = 2
@@ -75,7 +75,8 @@ class BertClassifier(nn.Module):
          # Freeze the BERT model
         if freeze_bert:
             for param in self.bert.parameters():
-                param.requires_grad = True #FALSE: If you want to freeze part of your model and train the rest, you can set requires_grad of the parameters you want to freeze to False.
+                param.requires_grad = True #FALSE training only the classifier, TRUE finetuning BERT
+                #FALSE: If you want to freeze part of your model and train the rest, you can set requires_grad of the parameters you want to freeze to False.
 
 
     def forward(self, input_ids, attention_mask):
@@ -98,19 +99,21 @@ class BertClassifier(nn.Module):
 
 
 #Create the BertClassfier class
-class BertClassifierAdapter(nn.Module):
+class BertClassifierAdapter(PreTrainedModel):
     """Bert Model for Classification Tasks."""
-    def __init__(self, freeze_bert=False):
+    config_class = AutoConfig
+    def __init__(self,config, freeze_bert=True): #tuning only the head
         """
          @param    bert: a BertModel object
          @param    classifier: a torch.nn.Module classifier
          @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
         """
-        super(BertClassifierAdapter, self).__init__()
+        #super(BertClassifier, self).__init__()
+        super().__init__(config)
 
         # Instantiate BERT model
         # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd')
+        self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
         self.D_in = 1024 #hidden size of Bert
         self.H = 512
         self.D_out = 2
@@ -134,7 +137,7 @@ class BertClassifierAdapter(nn.Module):
          # Freeze the BERT model
         if freeze_bert:
             for param in self.bert.parameters():
-                param.requires_grad = False
+                param.requires_grad = True
 
 
     def forward(self, input_ids, attention_mask):
@@ -156,6 +159,8 @@ class BertClassifierAdapter(nn.Module):
         logits = self.classifier(last_hidden_state_cls)
  
         return logits
+
+
 
 
      

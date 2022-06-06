@@ -21,6 +21,7 @@ from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig
 from transformers import AdamW, get_linear_schedule_with_warmup
 
 from sklearn.metrics import accuracy_score, roc_curve, auc
+from transformers.modeling_utils import PreTrainedModel
 
 
 def save_ckp(state, is_best, checkpoint_path, best_model_path):
