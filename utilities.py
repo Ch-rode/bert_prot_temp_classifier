@@ -17,12 +17,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
-from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig, BertConfig
+from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig
 from transformers import AdamW, get_linear_schedule_with_warmup
-from transformers.modeling_utils import PreTrainedModel
 
-from sklearn.metrics import accuracy_score, roc_curve, auc, classification_report, confusion_matrix
-
+from sklearn.metrics import accuracy_score, roc_curve, auc
 
 
 def save_ckp(state, is_best, checkpoint_path, best_model_path):
@@ -113,16 +111,8 @@ def evaluate_roc_valdata(probs, y_true):
     plt.xlabel('False Positive Rate')
     plt.savefig('ROC_valdata.png')
     plt.clf()
-    
-    # Creating classification report
-    logging.info(classification_report(y_true,y_pred))
-    
-    cm = confusion_matrix(y_true,y_pred)
-    logging.info(cm)
 
 
     return True
 
 
-
-#https://huggingface.co/docs/transformers/custom_models

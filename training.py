@@ -59,13 +59,13 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     # Load train data
     train_data = pd.read_csv(train_data,header=None)
     # Display 5 samples from the test data
-    print('Training data sample:',train_data.sample(5))
+    print(train_data.sample(5))
     logging.info('TRAIN SET distribution:{}'.format(Counter(train_data[1])))
 
     # Load val data
     val_data = pd.read_csv(val_data,header=None)
     # Display 5 samples from the test data
-    print('Validation data sample:',val_data.sample(5))
+    print(val_data.sample(5))
     logging.info('VAL SET distribution: {}'.format(Counter(val_data[1])))
 
 
@@ -130,7 +130,7 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
     logging.info("--TRAINING\n")
     
     # Creating the config file of the model
-    model.config.to_json_file("config.json")
+    # model.config.to_json_file("config.json")
 
     # Initialize tracker for minimum validation loss
     valid_loss_min = valid_loss_min_input 
@@ -231,7 +231,6 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
             valid_loss_min = val_loss
     
         # saving the model in hugginface format
-        
         model.save_pretrained('./best_model_hugginface/model_hugginface')
 
         if adapter == True:

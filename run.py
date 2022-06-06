@@ -35,6 +35,8 @@ def run(*argv):
 
     parser.add_argument("--adapter", help="Specify if working with Mesophilic/Thermophilic", type=str)
     parser.add_argument("--train_first_run", help="Specify if working with Mesophilic/Thermophilic", type=str)
+    parser.add_argument("--fine_tuning", help="Specify if working with Mesophilic/Thermophilic", type=str)
+
 
     # test mode
     parser.add_argument("--test_batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
@@ -79,6 +81,7 @@ def run(*argv):
         num_workers = args.num_workers
         start_epochs = args.start_epochs
         train_first_run=args.train_first_run
+        fine_tuning=args.fine_tuning
 
         print('--Start Training setup')
         set_seed(42)    # Set seed for reproducibility
@@ -88,7 +91,7 @@ def run(*argv):
         print('All the model checkpoint are saved in the ./checkpoint/ and ./best_model/ folders.')
 
         if args.adapter == True:
-            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,adapter=True) 
+            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning = fine_tuning,adapter=True) 
             
             if args.train_first_run:
                 logging.info(' * Training for first time')
@@ -103,7 +106,7 @@ def run(*argv):
                 train(model = model, optimizer=optimizer, scheduler=scheduler, train_dataloader = train_dataloader, val_dataloader = val_dataloader, start_epochs = start_epochs, epochs = n_epochs, valid_loss_min_input = valid_loss_min, evaluation = True, checkpoint_path = r"./checkpoint/current_checkpoint.pt", best_model_path = r"./best_model/best_model.pt",device=device,adapter=True)
 
         else:
-            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr) 
+            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning=fine_tuning) 
         
             if args.train_first_run:
                 logging.info(' * Training for first time')
