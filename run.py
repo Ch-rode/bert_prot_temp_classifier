@@ -90,6 +90,12 @@ def run(*argv):
 
         print('All the model checkpoint are saved in the ./checkpoint/ and ./best_model/ folders.')
 
+        if args.fine_tuning == 'True':
+            fine_tuning = 'True'
+            logging.info('fine_tuning: {}'.format(fine_tuning))
+        else:
+            fine_tuning = 'False'
+
         if args.adapter == True:
             bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning = fine_tuning,adapter=True) 
             

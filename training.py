@@ -249,7 +249,6 @@ def evaluate(model, val_dataloader,device):
     # Tracking variables
     val_accuracy = []
     val_loss = []
-    logging.info('Batch size for evaluation {}'.format(len(batch)))
 
     # For each batch in our validation set...
     for batch in val_dataloader:

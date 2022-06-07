@@ -48,7 +48,7 @@ def preprocessing_for_bert(data,MAX_LEN):
 class BertClassifier(PreTrainedModel):
     """Bert Model for Classification Tasks."""
     config_class = AutoConfig
-    def __init__(self,config=AutoConfig.from_pretrained("Rostlab/prot_bert_bfd"), freeze_bert=True): #tuning only the head
+    def __init__(self,config=AutoConfig.from_pretrained("Rostlab/prot_bert_bfd"), freeze_bert=None): #tuning only the head
         """
          @param    bert: a BertModel object
          @param    classifier: a torch.nn.Module classifier
@@ -72,11 +72,18 @@ class BertClassifier(PreTrainedModel):
             nn.Tanh()
         )
  
-         # Freeze the BERT model
-        if freeze_bert:
+ 
+        # Freeze the BERT model
+        if freeze_bert == 'True':
             for param in self.bert.parameters():
-                param.requires_grad = True #FALSE training only the classifier, TRUE finetuning BERT
-                #FALSE: If you want to freeze part of your model and train the rest, you can set requires_grad of the parameters you want to freeze to False.
+                param.requires_grad = False
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
+        if freeze_bert == 'False':
+            for param in self.bert.parameters():
+                param.requires_grad = True
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
 
 
     def forward(self, input_ids, attention_mask):
@@ -102,7 +109,7 @@ class BertClassifier(PreTrainedModel):
 class BertClassifierAdapter(PreTrainedModel):
     """Bert Model for Classification Tasks."""
     config_class = AutoConfig
-    def __init__(self,config, freeze_bert=True): #tuning only the head
+    def __init__(self,config, freeze_bert=None): #tuning only the head
         """
          @param    bert: a BertModel object
          @param    classifier: a torch.nn.Module classifier
@@ -132,12 +139,17 @@ class BertClassifierAdapter(PreTrainedModel):
             nn.Tanh()
         )
  
- #If you want to freeze part of your model and train the rest, you can set requires_grad of the parameters you want to freeze to False.
-
-         # Freeze the BERT model
-        if freeze_bert:
+        # Freeze the BERT model
+        if freeze_bert == 'True':
+            for param in self.bert.parameters():
+                param.requires_grad = False
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
+        if freeze_bert == 'False':
             for param in self.bert.parameters():
                 param.requires_grad = True
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
 
 
     def forward(self, input_ids, attention_mask):
@@ -170,19 +182,19 @@ def initialize_model(device,train_dataloader,epochs,lr,adapter=None,fine_tuning=
     if adapter == True:
         # Instantiate Bert Classifier
         logging.info(' --- Training with Adapters ---')
-        if fine_tuning == True:
+        if fine_tuning == 'True':
             logging.info('Fine-tuning Bert, unfreezing Bert parameters')
-            bert_classifier = BertClassifierAdapter(freeze_bert=False)
+            bert_classifier = BertClassifierAdapter(freeze_bert='False')
         else:
             logging.info('Not fine-tuning Bert, freezing Bert parameters')
-            bert_classifier = BertClassifierAdapter(freeze_bert=True)
+            bert_classifier = BertClassifierAdapter(freeze_bert='True')
     else:
-        if fine_tuning == True:
+        if fine_tuning == 'True':
             logging.info('Fine-tuning Bert, unfreezing Bert parameters')
-            bert_classifier = BertClassifier(freeze_bert=False)
+            bert_classifier = BertClassifier(freeze_bert='False')
         else:
             logging.info('Not fine-tuning Bert, freezing Bert parameters')
-            bert_classifier = BertClassifier(freeze_bert=True)
+            bert_classifier = BertClassifier(freeze_bert='True')
        
         
 
