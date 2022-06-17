@@ -1,4 +1,5 @@
 from utilities import *
+#from model import *
 from model import *
 
 
@@ -117,7 +118,7 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     return(train_dataloader,val_dataloader,y_val)
 
 
-
+     
 
 
 def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input, checkpoint_path, best_model_path, start_epochs, epochs, optimizer,scheduler,evaluation=True,adapter=None):
@@ -233,9 +234,9 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
         # saving the model in hugginface format
         model.save_pretrained('./best_model_hugginface/model_hugginface')
 
-        if adapter == True:
+        if adapter == 'True':
             #save only the adapter separately 
-            model.save_adapter('./best_model_hugginface/final_adapter','sequence_adapter')
+            model.save_adapter('./best_model_hugginface/final_adapter','tem_prot_adapter')
     #model.save_pretrained("your-save-dir/) 3. After that you can load the model with Model.from_pretrained("your-save-dir/") 
     
     logging.info("-----------------Training complete--------------------------")
@@ -252,7 +253,7 @@ def evaluate(model, val_dataloader,device):
 
     # For each batch in our validation set...
     for batch in val_dataloader:
-        logging.info('Batch size for evaluation {}'.format(len(batch)))
+        #logging.info('Batch size for evaluation {}'.format(len(batch)))
         # Load batch to GPU
         b_input_ids, b_attn_mask, b_labels = tuple(t.to(device) for t in batch)
 

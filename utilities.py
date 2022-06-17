@@ -17,11 +17,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
-from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig
+from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig,  BertAdapterModel, BertModel,AutoModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from sklearn.metrics import accuracy_score, roc_curve, auc
-from transformers.modeling_utils import PreTrainedModel
+from sklearn.metrics import accuracy_score, roc_curve, auc, classification_report, confusion_matrix
+
+
+from transformers.modeling_utils import PreTrainedModel , PretrainedConfig, PretrainedConfig, PreTrainedModel
+
 
 
 def save_ckp(state, is_best, checkpoint_path, best_model_path):
@@ -69,6 +72,19 @@ def set_seed(seed_value=42):
     torch.manual_seed(seed_value)
     torch.cuda.manual_seed_all(seed_value)
 
+
+def numel(m: torch.nn.Module, only_trainable: bool = False):
+    """
+    returns the total number of parameters used by `m` (only counting
+    shared parameters once); if `only_trainable` is True, then only
+    includes parameters with `requires_grad = True`
+    """
+    parameters = list(m.parameters())
+    if only_trainable:
+        parameters = [p for p in parameters if p.requires_grad]
+    unique = {p.data_ptr(): p for p in parameters}.values()
+    return sum(p.numel() for p in unique)
+
 def evaluate_roc_valdata(probs, y_true):
     """
     - Print AUC and accuracy on the test set
@@ -102,7 +118,7 @@ def evaluate_roc_valdata(probs, y_true):
     plt.clf()
 
     # Plot ROC AUC
-    plt.title('Receiver Operating Characteristic')
+    plt.title('Receiver Operating Characteristic Val Data')
     plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
     plt.legend(loc = 'lower right')
     plt.plot([0, 1], [0, 1],'r--')
@@ -112,6 +128,80 @@ def evaluate_roc_valdata(probs, y_true):
     plt.xlabel('False Positive Rate')
     plt.savefig('ROC_valdata.png')
     plt.clf()
+
+    # Creating classification report
+    logging.info('--Classification report for TEST DATA--')
+    logging.info(classification_report(y_true,y_pred))
+    
+    unique_label = np.unique([y_true, y_pred])
+    cm = pd.DataFrame(
+    confusion_matrix(y_true, y_pred, labels=unique_label), 
+    index=['true:{:}'.format(x) for x in unique_label], 
+    columns=['pred:{:}'.format(x) for x in unique_label]
+    )
+
+    
+    #cm = confusion_matrix(y_true,y_pred)
+    logging.info(cm)
+
+    return True
+
+def evaluate_roc_testdata(probs, y_true):
+    """
+    - Print AUC and accuracy on the test set
+    - Plot ROC
+    @params    probs (np.array): an array of predicted probabilities with shape (len(y_true), 2)
+    @params    y_true (np.array): an array of the true values with shape (len(y_true),)
+    """
+    preds = probs[:, 1]
+    fpr, tpr, thresholds = roc_curve(y_true, preds)
+    threshold = thresholds[np.argmin(np.abs(fpr+tpr-1))]
+    
+    roc_auc = auc(fpr, tpr)
+    logging.info(f'AUC: {roc_auc:.4f}')
+    logging.info(f'Threshold : {threshold:.4f}')
+       
+    # Get accuracy over the test set
+    y_pred = np.where(preds >= threshold, 1, 0)	
+    accuracy = accuracy_score(y_true, y_pred)
+    #logging.info('Evaluation on Validation set')
+    logging.info(f'Accuracy: {accuracy*100:.2f}%')
+
+    print('--Creating ROC plot (on best model from checkpoints)')
+    # Plot thresholds value (https://www.yourdatateacher.com/2021/06/14/are-you-still-using-0-5-as-a-threshold/)
+    plt.title('Threshold on test set')
+    plt.scatter(thresholds,np.abs(fpr+tpr-1))
+    plt.xlabel("Threshold")
+    plt.ylabel("|FPR + TPR - 1|")
+    plt.show()
+    plt.savefig('threshold_testdata.png')
+    plt.clf()
+
+    # Plot ROC AUC
+    plt.title('Receiver Operating Characteristic Test Data')
+    plt.plot(fpr, tpr, 'b', label = 'AUC = %0.2f' % roc_auc)
+    plt.legend(loc = 'lower right')
+    plt.plot([0, 1], [0, 1],'r--')
+    plt.xlim([0, 1])
+    plt.ylim([0, 1])
+    plt.ylabel('True Positive Rate')
+    plt.xlabel('False Positive Rate')
+    plt.savefig('ROC_testdata.png')
+    plt.clf()
+
+    # Creating classification report
+    logging.info('--Classification report for TEST DATA--')
+    logging.info(classification_report(y_true,y_pred))
+    unique_label = np.unique([y_true, y_pred])
+    cm = pd.DataFrame(
+    confusion_matrix(y_true, y_pred, labels=unique_label), 
+    index=['true:{:}'.format(x) for x in unique_label], 
+    columns=['pred:{:}'.format(x) for x in unique_label]
+    )
+
+    
+    #cm = confusion_matrix(y_true,y_pred)
+    logging.info(cm)
 
 
     return True

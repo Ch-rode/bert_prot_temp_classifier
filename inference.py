@@ -1,5 +1,5 @@
 from utilities import *
-from model import  preprocessing_for_bert, BertClassifier, tokenizer
+from model import  preprocessing_for_bert, BertTempProtClassifier, tokenizer
 
 
 def predict(model, dataloader,device):
@@ -35,14 +35,19 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
     """Perform full inference classification on a set of data"""
     set_seed(42)    # Set seed for reproducibility
 
-    checkpoint=torch.load(best_model)
+    # using pytorch checkpoints
+    #checkpoint=torch.load(best_model)
+    #model=BertTempProtClassifier()
+    #model.load_state_dict(checkpoint['state_dict'])
 
     device=device
     MAX_LEN=max_len
-
-    model=BertClassifier()
+ 
+    # using hugginface model saved
+    model=BertTempProtClassifier.from_pretrained(best_model)
     model = model.to(device)
-    model.load_state_dict(checkpoint['state_dict'])
+
+
     model.eval()
 
     #MAX_LEN=512
