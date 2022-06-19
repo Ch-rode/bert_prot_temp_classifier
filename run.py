@@ -5,7 +5,7 @@ from inference import run_inference,predict
 from testing import test
 
 
-""" python run.py --mode inference --data_path  sampledata_test  --best_model_path ./bestmodel_hugginface/model_hugginface  --device cuda  --pred_threshold 0.7 --num_workers 0 --max_len=512
+""" python init.py --mode inference --data_path  /home/rodella/NUOVI_DATI/TEST_cl_1  --best_model_path /home/rodella/NUOVI_DATI/Classifier/ratio1/best_model/best_model.pt  --device cuda  --pred_threshold 0.7 --num_workers 0 --max_len=512
 """
 
 """ python init.py --mode train --train_data sampledata --val_data sampledata --test_data sampledata --n_epochs 2 --learning_rate 0.001 --max_len 512 --batch_size 4 --num_workers 0 --start_epochs 0 --train_first_run TRUE
@@ -106,10 +106,11 @@ def run(*argv):
             else:  
                 logging.info(' * Resume training from checkpoints')
                 print('--Start Training from checkpoints')
-                model, optimizer, start_epoch, valid_loss_min = load_ckp(r"./best_model/best_model.pt", bert_classifier, optimizer)
-                logging.info("start_epoch = {}".format(start_epoch))
-                logging.info("valid_loss_min = {:.6f}".format(valid_loss_min))
-                train(model = model, optimizer=optimizer, scheduler=scheduler, train_dataloader = train_dataloader, val_dataloader = val_dataloader, start_epochs = start_epochs, epochs = n_epochs, valid_loss_min_input = valid_loss_min, evaluation = True, checkpoint_path = r"./checkpoint/current_checkpoint.pt", best_model_path = r"./best_model/best_model.pt",device=device,adapter='True')
+                model, optimizer, epoch, valid_loss_min = load_ckp(r"./checkpoint/current_checkpoint.pt", bert_classifier, optimizer)
+                logging.info('Epoch from checkpoint: {} '.format(epoch))
+                logging.info("start_epoch for resume training= {}".format(start_epochs))
+                logging.info("valid_loss_min for starting epoch = {:.6f}".format(valid_loss_min))
+                train(model = model, optimizer=optimizer, scheduler=scheduler, train_dataloader = train_dataloader, val_dataloader = val_dataloader, start_epochs = start_epochs, epochs = n_epochs, valid_loss_min_input = valid_loss_min, evaluation = True, checkpoint_path = r"./checkpoint/current_checkpoint.pt", best_model_path = r"./best_model/best_model.pt",device=device)
 
         else:
             bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning=fine_tuning) 
@@ -121,9 +122,10 @@ def run(*argv):
             else: 
                 logging.info(' * Resume training from checkpoints')
                 print('--Start Training from checkpoints')
-                model, optimizer, start_epoch, valid_loss_min = load_ckp(r"./best_model/best_model.pt", bert_classifier, optimizer)
-                logging.info("start_epoch = {}".format(start_epoch))
-                logging.info("valid_loss_min = {:.6f}".format(valid_loss_min))
+                model, optimizer, epoch, valid_loss_min = load_ckp(r"./checkpoint/current_checkpoint.pt", bert_classifier, optimizer)
+                logging.info('Epoch from checkpoint: {} '.format(epoch))
+                logging.info("start_epoch for resume training= {}".format(start_epochs))
+                logging.info("valid_loss_min for starting epoch = {:.6f}".format(valid_loss_min))
                 train(model = model, optimizer=optimizer, scheduler=scheduler, train_dataloader = train_dataloader, val_dataloader = val_dataloader, start_epochs = start_epochs, epochs = n_epochs, valid_loss_min_input = valid_loss_min, evaluation = True, checkpoint_path = r"./checkpoint/current_checkpoint.pt", best_model_path = r"./best_model/best_model.pt",device=device)
 
 
@@ -138,7 +140,7 @@ def run(*argv):
     if args.mode == 'test':
 
         print('--Removing checkpoints directory, keeping only best model')
-        #shutil.rmtree(r"./best_model/") 
+        shutil.rmtree(r"./best_model/") 
         print('--Start evaluation on test set')
         test_data = args.test_data
         lr = args.learning_rate #5e-06
