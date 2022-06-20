@@ -2,6 +2,8 @@ from utilities import *
 from model import  preprocessing_for_bert, BertTempProtClassifier, tokenizer
 
 
+
+#pu<<<
 def predict(model, dataloader,device):
     """Perform a forward pass on the trained BERT model to predict probabilities on a set."""
     # Put the model into the evaluation mode. The dropout layers are disabled during
