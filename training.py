@@ -236,7 +236,7 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
 
         if adapter == 'True':
             #save only the adapter separately 
-            model.save_adapter('./best_model_hugginface/final_adapter','tem_prot_adapter')
+            model.bert.save_adapter('./best_model_hugginface/final_adapter','tem_prot_adapter')
     #model.save_pretrained("your-save-dir/) 3. After that you can load the model with Model.from_pretrained("your-save-dir/") 
     
     logging.info("-----------------Training complete--------------------------")
@@ -260,6 +260,7 @@ def evaluate(model, val_dataloader,device):
         # Compute logits
         with torch.no_grad():
             logits = model(b_input_ids, b_attn_mask)
+            print('logits {}'.format(logits))
 
         # Compute loss
         loss = loss_fn(logits, b_labels)
@@ -267,6 +268,10 @@ def evaluate(model, val_dataloader,device):
 
         # Get the predictions
         preds = torch.argmax(logits, dim=1).flatten()
+        print('preds in the evaluation after argmax {}'.format(preds))
+        #logits tensor([[-0.8502,  0.8427]], device='cuda:0')
+        #preds in the evaluation after argmax tensor([1], device='cuda:0')
+
 
         # Calculate the accuracy rate
         accuracy = (preds == b_labels).cpu().numpy().mean() * 100
@@ -277,6 +282,8 @@ def evaluate(model, val_dataloader,device):
     val_accuracy = np.mean(val_accuracy)
 
     return val_loss, val_accuracy
+
+
 
 
 

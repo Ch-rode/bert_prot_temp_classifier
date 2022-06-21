@@ -40,6 +40,7 @@ def run(*argv):
 
     # test mode
     parser.add_argument("--test_batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
+    parser.add_argument("--val_threshold", help="Specify if working with Mesophilic/Thermophilic", type=float)
 
 
     # inference mode
@@ -149,11 +150,12 @@ def run(*argv):
         adapter = args.adapter
         test_batch_size=args.test_batch_size
         mode=args.mode
+        val_threshold=args.val_threshold
         
         if adapter == 'True':
-            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,adapter='True',mode='test')
+            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold=val_threshold,adapter='True',mode='test')
         else:
-            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,mode=None)
+            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold=val_threshold,mode=None)
 
         
 

@@ -73,18 +73,6 @@ def set_seed(seed_value=42):
     torch.cuda.manual_seed_all(seed_value)
 
 
-def numel(m: torch.nn.Module, only_trainable: bool = False):
-    """
-    returns the total number of parameters used by `m` (only counting
-    shared parameters once); if `only_trainable` is True, then only
-    includes parameters with `requires_grad = True`
-    """
-    parameters = list(m.parameters())
-    if only_trainable:
-        parameters = [p for p in parameters if p.requires_grad]
-    unique = {p.data_ptr(): p for p in parameters}.values()
-    return sum(p.numel() for p in unique)
-
 def evaluate_roc_valdata(probs, y_true):
     """
     - Print AUC and accuracy on the test set
@@ -140,32 +128,33 @@ def evaluate_roc_valdata(probs, y_true):
     columns=['pred:{:}'.format(x) for x in unique_label]
     )
 
-    
     #cm = confusion_matrix(y_true,y_pred)
     logging.info(cm)
 
     return True
 
-def evaluate_roc_testdata(probs, y_true):
+def evaluate_roc_testdata(probs, y_true,val_threshold):
     """
     - Print AUC and accuracy on the test set
     - Plot ROC
     @params    probs (np.array): an array of predicted probabilities with shape (len(y_true), 2)
     @params    y_true (np.array): an array of the true values with shape (len(y_true),)
     """
-    preds = probs[:, 1]
+    logging.info('--EVALUATION ON TEST DATA USING VALIDATION THRESHOLD')
+    logging.info(f'Using Threshold tuned on val data: {val_threshold:.4f}')
+    preds = np.where(probs >= val_threshold, 1, 0)
+    preds=preds[:, 1]
     fpr, tpr, thresholds = roc_curve(y_true, preds)
-    threshold = thresholds[np.argmin(np.abs(fpr+tpr-1))]
+    test_threshold = thresholds[np.argmin(np.abs(fpr+tpr-1))]
+    logging.info('Threshold estimated on test set: {}'.format(test_threshold))
     
     roc_auc = auc(fpr, tpr)
     logging.info(f'AUC: {roc_auc:.4f}')
-    logging.info(f'Threshold : {threshold:.4f}')
+    
        
     # Get accuracy over the test set
-    y_pred = np.where(preds >= threshold, 1, 0)	
-    accuracy = accuracy_score(y_true, y_pred)
-    #logging.info('Evaluation on Validation set')
-    logging.info(f'Accuracy: {accuracy*100:.2f}%')
+    accuracy = accuracy_score(y_true, preds)
+    logging.info(f'Accuracy on test set: {accuracy*100:.2f}%')
 
     print('--Creating ROC plot (on best model from checkpoints)')
     # Plot thresholds value (https://www.yourdatateacher.com/2021/06/14/are-you-still-using-0-5-as-a-threshold/)
@@ -190,11 +179,11 @@ def evaluate_roc_testdata(probs, y_true):
     plt.clf()
 
     # Creating classification report
-    logging.info('--Classification report for TEST DATA--')
-    logging.info(classification_report(y_true,y_pred))
-    unique_label = np.unique([y_true, y_pred])
+    logging.info('--Classification report for TEST DATA using--')
+    logging.info(classification_report(y_true,preds))
+    unique_label = np.unique([y_true, preds])
     cm = pd.DataFrame(
-    confusion_matrix(y_true, y_pred, labels=unique_label), 
+    confusion_matrix(y_true, preds, labels=unique_label), 
     index=['true:{:}'.format(x) for x in unique_label], 
     columns=['pred:{:}'.format(x) for x in unique_label]
     )
