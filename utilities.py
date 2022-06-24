@@ -72,6 +72,18 @@ def set_seed(seed_value=42):
     torch.manual_seed(seed_value)
     torch.cuda.manual_seed_all(seed_value)
 
+def numel(m: torch.nn.Module, only_trainable: bool = False):
+    """
+    returns the total number of parameters used by `m` (only counting
+    shared parameters once); if `only_trainable` is True, then only
+    includes parameters with `requires_grad = True`
+    """
+    parameters = list(m.parameters())
+    if only_trainable:
+        parameters = [p for p in parameters if p.requires_grad]
+    unique = {p.data_ptr(): p for p in parameters}.values()
+    return sum(p.numel() for p in unique)
+
 
 def evaluate_roc_valdata(probs, y_true):
     """
@@ -142,11 +154,15 @@ def evaluate_roc_testdata(probs, y_true,val_threshold):
     """
     logging.info('--EVALUATION ON TEST DATA USING VALIDATION THRESHOLD')
     logging.info(f'Using Threshold tuned on val data: {val_threshold:.4f}')
-    preds = np.where(probs >= val_threshold, 1, 0)
-    preds=preds[:, 1]
+
+    print(probs)
+    preds=probs[:, 1]
+    print(preds)
+    preds = np.where(preds >= val_threshold, 1, 0)
+    print(preds)
     fpr, tpr, thresholds = roc_curve(y_true, preds)
     test_threshold = thresholds[np.argmin(np.abs(fpr+tpr-1))]
-    logging.info('Threshold estimated on test set: {}'.format(test_threshold))
+    logging.info(f'Threshold estimated on test set:  {test_threshold:.4f}')
     
     roc_auc = auc(fpr, tpr)
     logging.info(f'AUC: {roc_auc:.4f}')

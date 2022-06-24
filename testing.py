@@ -11,29 +11,31 @@ def evaluate_test(model, val_dataloader,device):
     model.eval()
     loss_fn = nn.CrossEntropyLoss()
 
-    all_logits = []
+
     val_loss = []
+    all_logits = []
 
     # For each batch in our test set...
     for batch in val_dataloader:
         # Load batch to GPU
         b_input_ids, b_attn_mask, b_labels = tuple(t.to(device) for t in batch)
-        print(b_labels)
+        #print(b_labels)
 
         # Compute logits
         with torch.no_grad():
             logits = model(b_input_ids, b_attn_mask)
             #print(logits)
         all_logits.append(logits)
+
         loss = loss_fn(logits, b_labels)
         val_loss.append(loss.item())
-    
-    # Concatenate logits from each batch
-    all_logits = torch.cat(all_logits, dim=0)
-    #print(all_logits)
 
-    # Apply softmax to calculate probabilities
+    all_logits = torch.cat(all_logits, dim=0)
+    print(all_logits)
+
     probs = F.softmax(all_logits, dim=1).cpu().numpy()
+    print(probs)
+
     #from tensor([[-0.9970,  0.9971]]) to array([[0.11982378, 0.8801762 ]], dtype=float32
     val_loss = np.mean(val_loss)
 
@@ -81,18 +83,18 @@ def test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold,a
     print('Creating TestDataloader...')
     # Create the DataLoader for our test set
     test_dataset = TensorDataset(test_inputs, test_masks,test_labels)
-    test_sampler =  RandomSampler(test_dataset)
+    test_sampler =  SequentialSampler(test_dataset)
     test_dataloader = DataLoader(test_dataset, sampler=test_sampler, batch_size=test_batch_size,  num_workers = num_workers)
 
-
-    probs, val_loss = evaluate_test(bert_classifier, test_dataloader,device)
+    print('--Start evaluation')
+    all_probs, val_loss = evaluate_test(bert_classifier, test_dataloader,device)
 
     logging.info("Evaluation on the test set ended, test loss: {:.4f} ".format(val_loss))
 
 
     # Evaluate the Bert classifier and find the optimal threshold value using ROC
     logging.info('--ROC AND METRICS ON TEST DATA, on best model')
-    evaluate_roc_testdata(probs, y_test,val_threshold)
+    evaluate_roc_testdata(all_probs, y_test,val_threshold)
 
     return True
 

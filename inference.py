@@ -19,7 +19,7 @@ def predict(model, dataloader,device):
         with torch.no_grad():
             logits = model(b_input_ids, b_attn_mask)
             #print(logits)
-            all_logits.append(logits)
+        all_logits.append(logits)
     
     # Concatenate logits from each batch
     all_logits = torch.cat(all_logits, dim=0)
@@ -27,7 +27,7 @@ def predict(model, dataloader,device):
 
     # Apply softmax to calculate probabilities
     probs = F.softmax(all_logits, dim=1).cpu().numpy()
-    #from tensor([[-0.9970,  0.9971]]) to array([[0.11982378, 0.8801762 ]], dtype=float32
+    #print(probs)
 
     return probs
 
