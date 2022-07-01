@@ -142,7 +142,7 @@ def evaluate_roc_valdata(probs, y_true,val_threshold=None):
     # plot the precision-recall curves
     plt.title('Precision-Recall curves on Val Data')
     no_skill = len(y_true[y_true==1]) / len(y_true)
-    plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='No Skill')
+    plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='Random Model')
     plt.plot(lr_recall, lr_precision, marker='.', label='Classifier')
     # axis labels
     plt.xlabel('Recall')
@@ -227,7 +227,7 @@ def evaluate_roc_testdata(probs, y_true,val_threshold):
     # plot the precision-recall curves
     plt.title('Precision-Recall curves on Test Data')
     no_skill = len(y_true[y_true==1]) / len(y_true)
-    plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='No Skill')
+    plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='Random Model')
     plt.plot(lr_recall, lr_precision, marker='.', label='Classifier')
     # axis labels
     plt.xlabel('Recall')
