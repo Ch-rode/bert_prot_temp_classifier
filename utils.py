@@ -20,7 +20,7 @@ from torch.utils.data import TensorDataset, DataLoader, RandomSampler, Sequentia
 from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig,  BertAdapterModel, BertModel,AutoModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 
-from sklearn.metrics import accuracy_score, roc_curve, auc, classification_report, confusion_matrix, precision_recall_curve
+from sklearn.metrics import accuracy_score, roc_curve, auc, classification_report, confusion_matrix, precision_recall_curve, matthews_corrcoef
 
 
 from transformers.modeling_utils import PreTrainedModel , PretrainedConfig, PretrainedConfig, PreTrainedModel
@@ -85,7 +85,7 @@ def numel(m: torch.nn.Module, only_trainable: bool = False):
     return sum(p.numel() for p in unique)
 
 
-def evaluate_roc_valdata(probs, y_true):
+def evaluate_roc_valdata(probs, y_true,val_threshold=None):
     """
     - Print AUC and accuracy on the test set
     - Plot ROC
@@ -93,7 +93,7 @@ def evaluate_roc_valdata(probs, y_true):
     @params    y_true (np.array): an array of the true values with shape (len(y_true),)
     """
     logging.info('*** EVALUATION ON VALIDATION DATA ***')
-    print('--Tuning the inference threshold using ROC')
+    print('--Tuning the inference threshold using ROC if not specified one')
     preds = probs[:, 1]
     fpr, tpr, thresholds = roc_curve(y_true, preds)
     lr_precision, lr_recall, _ = precision_recall_curve(y_true, preds)
@@ -101,11 +101,19 @@ def evaluate_roc_valdata(probs, y_true):
     
     roc_auc = auc(fpr, tpr)
     logging.info(f'AUC: {roc_auc:.4f}')
-    logging.info(f'Threshold to use for inference : {threshold:.4f}')
+
+    if val_threshold:
+        threshold = val_threshold
+        logging.info(f'Desidered Threshold : {threshold:.4f}')
+    else:
+        threshold = threshold 
+        logging.info(f'Tuned Threshold: {threshold:.4f}')
        
     # Get accuracy over the val set
     y_pred = np.where(preds >= threshold, 1, 0)	
     accuracy = accuracy_score(y_true, y_pred)
+    MC = matthews_corrcoef(y_true, y_pred)
+    logging.info(f'Matthews Correlation Coefficient computed after applying the tuned/selected threshold : {MC}')
     logging.info(f'Accuracy: {accuracy*100:.2f}%')
 
     print('--Creating Threshold plot and ROC plot (until last bestmodel if training from checkpoints)')
@@ -115,7 +123,7 @@ def evaluate_roc_valdata(probs, y_true):
     plt.xlabel("Threshold")
     plt.ylabel("|FPR + TPR - 1|")
     plt.show()
-    plt.savefig('threshold_tuning_valdata.png')
+    plt.savefig(str('threshold_tuning_valdata_'+ str(threshold) +'.png'))
     plt.clf()
 
     # Plot ROC AUC
@@ -127,12 +135,12 @@ def evaluate_roc_valdata(probs, y_true):
     plt.ylim([0, 1])
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
-    plt.savefig('ROC_valdata.png')
+    plt.savefig(str('ROC_valdata_' + str(threshold)+'.png'))
     plt.clf()
 
 
     # plot the precision-recall curves
-    plt.title('Precision Recall curves on Val Data')
+    plt.title('Precision-Recall curves on Val Data')
     no_skill = len(y_true[y_true==1]) / len(y_true)
     plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='No Skill')
     plt.plot(lr_recall, lr_precision, marker='.', label='Classifier')
@@ -142,11 +150,11 @@ def evaluate_roc_valdata(probs, y_true):
     # show the legend
     plt.legend()
     # show the plot
-    plt.savefig('precision_recall_test.png')
+    plt.savefig(str('precision_recall_val' + str(threshold) +'.png'))
     plt.clf()
 
     # Creating classification report
-    logging.info('--Classification report for TEST DATA--')
+    logging.info('--Classification report for VAL DATA--')
     logging.info(classification_report(y_true,y_pred))
     
     unique_label = np.unique([y_true, y_pred])
@@ -160,6 +168,7 @@ def evaluate_roc_valdata(probs, y_true):
 
     return True
 
+
 def evaluate_roc_testdata(probs, y_true,val_threshold):
     """
     - Print AUC and accuracy on the test set
@@ -168,24 +177,28 @@ def evaluate_roc_testdata(probs, y_true,val_threshold):
     @params    y_true (np.array): an array of the true values with shape (len(y_true),)
     """
     logging.info('*** EVALUATION ON TEST DATA USING VALIDATION THRESHOLD ***')
-    logging.info(f'Using the threshold tuned on val data: {val_threshold:.4f}')
+    logging.info(f'Applying the tuned threshold on val data: {val_threshold:.4f}')
 
-    print(probs)
+
     preds=probs[:, 1]
-    print(preds)
     preds = np.where(preds >= val_threshold, 1, 0)
-    print(preds)
     fpr, tpr, thresholds = roc_curve(y_true, preds)
+    lr_precision, lr_recall, _ = precision_recall_curve(y_true, preds)
     test_threshold = thresholds[np.argmin(np.abs(fpr+tpr-1))]
     logging.info(f'Threshold estimated on test set:  {test_threshold:.4f}')
     
     roc_auc = auc(fpr, tpr)
     logging.info(f'AUC: {roc_auc:.4f}')
-    
-       
+
+    # computing MC Coefficients
+    MC = matthews_corrcoef(y_true, preds)
+    logging.info(f'Matthews Correlation Coefficient computed after applying the tuned/selected threshold : {MC}')
+
+
     # Get accuracy over the test set
     accuracy = accuracy_score(y_true, preds)
     logging.info(f'Accuracy on test set: {accuracy*100:.2f}%')
+
 
     print('--Creating ROC plot (on best model from checkpoints)')
     # Plot thresholds value (https://www.yourdatateacher.com/2021/06/14/are-you-still-using-0-5-as-a-threshold/)
@@ -194,8 +207,9 @@ def evaluate_roc_testdata(probs, y_true,val_threshold):
     plt.xlabel("Threshold")
     plt.ylabel("|FPR + TPR - 1|")
     plt.show()
-    plt.savefig('threshold_testdata.png')
+    plt.savefig(str('threshold_testdata_' + str(val_threshold) +'.png'))
     plt.clf()
+
 
     # Plot ROC AUC
     plt.title('Receiver Operating Characteristic Test Data')
@@ -206,11 +220,26 @@ def evaluate_roc_testdata(probs, y_true,val_threshold):
     plt.ylim([0, 1])
     plt.ylabel('True Positive Rate')
     plt.xlabel('False Positive Rate')
-    plt.savefig('ROC_testdata.png')
+    plt.savefig(str('ROC_testdata_' + str(val_threshold) + '.png'))
+    plt.clf()
+
+
+    # plot the precision-recall curves
+    plt.title('Precision-Recall curves on Test Data')
+    no_skill = len(y_true[y_true==1]) / len(y_true)
+    plt.plot([0, 1], [no_skill, no_skill], linestyle='--', label='No Skill')
+    plt.plot(lr_recall, lr_precision, marker='.', label='Classifier')
+    # axis labels
+    plt.xlabel('Recall')
+    plt.ylabel('Precision')
+    # show the legend
+    plt.legend()
+    # show the plot
+    plt.savefig(str('precision_recall_test_' + str(val_threshold) +'.png'))
     plt.clf()
 
     # Creating classification report
-    logging.info('Classification report for TEST DATA using validation threshold:')
+    logging.info('Classification report for TEST DATA using validation threshold or defined by us:')
     logging.info(classification_report(y_true,preds))
     unique_label = np.unique([y_true, preds])
     cm = pd.DataFrame(

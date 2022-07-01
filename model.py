@@ -109,12 +109,8 @@ class BertTempProtClassifier(PreTrainedModel):
         #super(BertClassifier, self).__init__()
         super().__init__(config)
 
-        # Instantiate BERT model
-        # Specify hidden size of BERT, hidden size of our classifier, and number of labels
-        if adapter == 'True':
-            self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
-        else:
-            self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
+
+        self.bert = BertAdapterModel(config=config)
 
         self.D_in = 1024 #hidden size of Bert
         self.H = 512
@@ -122,12 +118,20 @@ class BertTempProtClassifier(PreTrainedModel):
         
         if adapter == 'True':
             if mode == 'train':
+                self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
                 # Add a new adapter
                 self.bert.add_adapter("tem_prot_adapter",set_active=True)
                 self.bert.train_adapter(["tem_prot_adapter"])
-            if mode == 'test':
-                adapter_name=self.bert.load_adapter("tem_prot_adapter")
-                self.bert.set_active_adapters(adapter_name)
+            if mode == 'test' :
+                self.bert = BertAdapterModel(config=config)
+                self.bert.load_adapter("./best_model_hugginface/final_adapter")
+                self.bert.set_active_adapters('tem_prot_adapter')
+        else:
+            if mode == 'train':
+                self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
+            if mode == 'test' :
+                self.bert = BertModel(config=config)
+
 
  
         # Instantiate the classifier head with some two-layer feed-forward classifier
@@ -185,11 +189,11 @@ def initialize_model(device,train_dataloader,epochs,lr,adapter=None,fine_tuning=
     else:
         if fine_tuning == 'True':
             logging.info('Fine-tuning Bert, unfreezing Bert parameters')
-            bert_classifier = BertTempProtClassifier(freeze_bert='False')
+            bert_classifier = BertTempProtClassifier(freeze_bert='False',mode=mode)
             #logging.info(bert_classifier)
         else:
             logging.info('Not fine-tuning Bert, freezing Bert parameters')
-            bert_classifier = BertTempProtClassifier(freeze_bert='True')
+            bert_classifier = BertTempProtClassifier(freeze_bert='True',mode=mode)
             #logging.info(bert_classifier)
     
 

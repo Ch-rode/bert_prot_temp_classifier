@@ -3,6 +3,7 @@ from training import train, data_prep, training_setup
 from model import initialize_model,BertTempProtConfig
 from inference import run_inference,predict
 from testing import test
+from validation import validation
 
 
 """ python init.py --mode inference --data_path  /home/rodella/NUOVI_DATI/TEST_cl_1  --best_model_path /home/rodella/NUOVI_DATI/Classifier/ratio1/best_model/best_model.pt  --device cuda  --pred_threshold 0.7 --num_workers 0 --max_len=512
@@ -18,11 +19,13 @@ def run(*argv):
     parser = argparse.ArgumentParser(description='BERT Classifier to discriminate between Mesophilic and Thermophilic sequences')
 
     
-    parser.add_argument("--mode", help="Specify if you are in the 'train', 'inference' or 'test' mode", type=str)
+    parser.add_argument("--mode", help="Specify if you are in the 'train', 'inference', 'test' or 'validation' mode", type=str)
 
     # args common to all mode
     parser.add_argument("--num_workers", help="Specify if working with Mesophilic/Thermophilic", type=int)
     parser.add_argument("--max_len", help="Specify if working with Mesophilic/Thermophilic", type=int)
+    parser.add_argument("--adapter", help="Specify if working with Mesophilic/Thermophilic", type=str)
+    parser.add_argument("--fine_tuning", help="Specify if working with Mesophilic/Thermophilic", type=str)
 
     # training mode
     parser.add_argument("--train_data", help="Specify if working with Mesophilic/Thermophilic", type=str)
@@ -33,21 +36,24 @@ def run(*argv):
     parser.add_argument("--batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
     parser.add_argument("--start_epochs", help="Specify if working with Mesophilic/Thermophilic", type=int)
 
-    parser.add_argument("--adapter", help="Specify if working with Mesophilic/Thermophilic", type=str)
+    
     parser.add_argument("--train_first_run", help="Specify if working with Mesophilic/Thermophilic", type=str)
-    parser.add_argument("--fine_tuning", help="Specify if working with Mesophilic/Thermophilic", type=str)
-
+    
 
     # test mode
     parser.add_argument("--test_batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
-    parser.add_argument("--val_threshold", help="Specify if working with Mesophilic/Thermophilic", type=float)
+    #parser.add_argument("--val_threshold", help="Specify if working with Mesophilic/Thermophilic", type=float)
 
 
     # inference mode
-    parser.add_argument("--input_data", help="Specify if working with Mesophilic/Thermophilic", type=str)
+    parser.add_argument("--data", help="Specify if working with Mesophilic/Thermophilic", type=str)
     parser.add_argument("--best_model_path", help="Specify if working with Mesophilic/Thermophilic", type=str)
-    parser.add_argument("--device", help="Specify if working with Mesophilic/Thermophilic", type=str)
     parser.add_argument("--pred_threshold", help="Specify if working with Mesophilic/Thermophilic", type=float)
+
+    # validation mode
+    parser.add_argument("--val_batch_size", help="Specify if working with Mesophilic/Thermophilic", type=int)
+    parser.add_argument("--val_threshold", help="Specify if working with Mesophilic/Thermophilic", type=float)
+
     
             
 
@@ -138,6 +144,29 @@ def run(*argv):
         evaluate_roc_valdata(probs, y_val)
 
 
+    if args.mode == 'val':
+
+        val_data = args.val_data
+        val_batch_size = args.val_batch_size
+        num_workers = args.num_workers
+        val_threshold=args.val_threshold # if want to use a desidered threshold otherwise it will tuned the best one
+        adapter = args.adapter
+
+        set_seed(42)    # Set seed for reproducibility
+        if args.adapter == 'True' :
+            if args.val_threshold:
+                validation(val_data,val_batch_size, device, num_workers, adapter='True',val_threshold=val_threshold,)
+            else:
+                validation(val_data,val_batch_size, device, num_workers, adapter='True',val_threshold=None,)
+        else: 
+            if args.val_threshold:
+                validation(val_data,val_batch_size, device, num_workers, adapter=None,val_threshold=val_threshold,)
+            else:
+                validation(val_data,val_batch_size, device, num_workers, adapter=None,val_threshold=None,)
+        
+
+
+
     if args.mode == 'test':
 
         #print('--Removing checkpoints directory, keeping only best model')
@@ -145,25 +174,24 @@ def run(*argv):
         print('--Start evaluation on test set')
         test_data = args.test_data
         lr = args.learning_rate #5e-06
-        device = args.device
         num_workers = args.num_workers
         adapter = args.adapter
         test_batch_size=args.test_batch_size
         mode=args.mode
         val_threshold=args.val_threshold
+        adapter = args.adapter
         
         if adapter == 'True':
-            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold=val_threshold,adapter='True',mode='test')
+            test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold=val_threshold,adapter='True',mode='test')
         else:
-            test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold=val_threshold,mode=None)
+            test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold=val_threshold,mode='test')
 
         
 
 
     if args.mode == 'inference':
-        data=args.input_data
+        data=args.data
         best_model=args.best_model_path
-        device=args.device
         threshold=args.pred_threshold
         num_workers=args.num_workers
 
@@ -171,7 +199,7 @@ def run(*argv):
         print('--Starting Inference for the data: {}'.format(data))
         print('--Using the best model weights from: {}'.format(best_model))
         
-        run_inference(data,best_model,device,threshold,num_workers,max_len)
+        run_inference(data,best_model,device,threshold,num_workers,MAX_LEN)
         print('--Inference ended')
     
 

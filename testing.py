@@ -45,7 +45,7 @@ def evaluate_test(model, test_dataloader, device):
     return probs, test_loss 
 
 
-def test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold,adapter=None,mode=None,):
+def test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold,adapter=None,mode=None,):
     """Evaluate the Bert classifier on Test set"""
     logging.info(' ** Evaluation on the TEST SET **')
 
@@ -53,33 +53,31 @@ def test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold,a
     if adapter == 'True':
         # Instantiate Bert Classifier
         logging.info(' --- Testing model with Adapters ---')
-        bert_classifier = BertTempProtClassifier(freeze_bert='True',adapter='True',mode=mode).from_pretrained('./best_model_hugginface/model_hugginface')
+        bert_classifier = BertTempProtClassifier(freeze_bert='True',adapter='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
     else:
-        bert_classifier = BertTempProtClassifier(freeze_bert='True').from_pretrained('./best_model_hugginface/model_hugginface')
+        bert_classifier = BertTempProtClassifier(freeze_bert='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
 
     # Tell PyTorch to run the model on GPU
     bert_classifier = bert_classifier.to(device)
 
-    # Create the optimizer
-    optimizer = AdamW(bert_classifier.parameters(),
-                      lr=lr,    # Default learning rate
-                      eps=1e-8    # Default epsilon value
-                      )
 
     # Load test Data
-    test_data = pd.read_csv(test_data,header=None)
+    # the format of the test file is ID, SEQUENCE, LABEL
+    test_data = pd.read_csv(test_data,header=None,sep=',')
+    import copy
+    sequences = copy.copy(test_data[1])
 
     # Display 5 samples from the test data
     print(test_data.sample(5))
-    logging.info('TEST SET distribution: {}'.format(Counter(test_data[1])))
+    logging.info('TEST SET distribution: {}'.format(Counter(test_data[2])))
 
     print('--Tokenizing test data...')
     # Run `preprocessing_for_bert` on the test set
-    test_data[0]=[" ".join("".join(sample.split())) for sample in test_data[0]]
-    test_inputs, test_masks = preprocessing_for_bert(test_data[0],MAX_LEN)
+    test_data[1]=[" ".join("".join(sample.split())) for sample in test_data[1]]
+    test_inputs, test_masks = preprocessing_for_bert(test_data[1],MAX_LEN)
 
     # Label
-    y_test=test_data[1]
+    y_test=test_data[2]
 
     # Convert other data types to torch.Tensor
     test_labels = torch.tensor(y_test)
@@ -95,7 +93,14 @@ def test(test_data,num_workers,device,MAX_LEN,lr,test_batch_size,val_threshold,a
 
     logging.info("Evaluation on the test set ended, test loss: {:.4f} ".format(test_loss))
     
+    
+    rows = zip(test_data[0], sequences, test_data[2], all_probs)
+    import csv
 
+    with open('test.out', "w") as f:
+        writer = csv.writer(f)
+        for row in rows:
+            writer.writerow(row)
 
     # Evaluate the Bert classifier and find the optimal threshold value using ROC
     logging.info('ROC AND METRICS ON TEST DATA, by best model')

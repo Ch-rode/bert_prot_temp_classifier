@@ -61,20 +61,20 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     train_data = pd.read_csv(train_data,header=None)
     # Display 5 samples from the test data
     print(train_data.sample(5))
-    logging.info('TRAIN SET distribution:{}'.format(Counter(train_data[1])))
+    logging.info('TRAIN SET distribution:{}'.format(Counter(train_data[2])))
 
     # Load val data
     val_data = pd.read_csv(val_data,header=None)
     # Display 5 samples from the test data
     print(val_data.sample(5))
-    logging.info('VAL SET distribution: {}'.format(Counter(val_data[1])))
+    logging.info('VAL SET distribution: {}'.format(Counter(val_data[2])))
 
 
     ## 4. Tokenization and DataPreparation
 
     # Rostlab/prot_bert requires that the AA are separated between each other with a space
-    train_data[0]= [" ".join("".join(sample.split())) for sample in train_data[0]]
-    val_data[0]=[" ".join("".join(sample.split())) for sample in val_data[0]]
+    train_data[1]= [" ".join("".join(sample.split())) for sample in train_data[1]]
+    val_data[1]=[" ".join("".join(sample.split())) for sample in val_data[1]]
 
     #check
     print('Checking data prep: {}'.format(train_data.head()))
@@ -82,19 +82,19 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
 
     # Run function `preprocessing_for_bert` on the train set, validation set and test set
     print('Tokenizing data...')
-    train_inputs, train_masks = preprocessing_for_bert(train_data[0],MAX_LEN)
-    val_inputs,val_masks = preprocessing_for_bert(val_data[0],MAX_LEN)
+    train_inputs, train_masks = preprocessing_for_bert(train_data[1],MAX_LEN)
+    val_inputs,val_masks = preprocessing_for_bert(val_data[1],MAX_LEN)
 
     #check
-    logging.info("Example and check of the tokenized data: {}".format(train_data[0][0],train_inputs[0],train_masks[0]))
+    logging.info("Example and check of the tokenized data: {}".format(train_data[1][0],train_inputs[0],train_masks[0]))
 
 
     ## 5 Create PyTorch DataLoader
 
     # Training label
-    y_train=train_data[1]
+    y_train=train_data[2]
     # Val label
-    y_val=val_data[1]
+    y_val=val_data[2]
 
     # Convert other data types to torch.Tensor
     train_labels = torch.tensor(y_train)
