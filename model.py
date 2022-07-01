@@ -1,5 +1,5 @@
 from this import d
-from utilities import *
+from utils import *
 
 # Load the BERT tokenizer
 tokenizer = BertTokenizer.from_pretrained('Rostlab/prot_bert', do_lower_case=False)
@@ -94,7 +94,6 @@ class BertTempProtConfig(PretrainedConfig):
 
 
 bert_config=BertTempProtConfig()
-#bert_config.save_pretrained("bert_temp_prot_classifier")
 
 
 #Create the BertClassfier class
@@ -122,14 +121,13 @@ class BertTempProtClassifier(PreTrainedModel):
         self.D_out = 2
         
         if adapter == 'True':
-            if mode == 'test':
-                adapter_name=self.bert.load_adapter("tem_prot_adapter")
-                self.bert.set_active_adapters(adapter_name)
-
-            else:
+            if mode == 'train':
                 # Add a new adapter
                 self.bert.add_adapter("tem_prot_adapter",set_active=True)
                 self.bert.train_adapter(["tem_prot_adapter"])
+            if mode == 'test':
+                adapter_name=self.bert.load_adapter("tem_prot_adapter")
+                self.bert.set_active_adapters(adapter_name)
 
  
         # Instantiate the classifier head with some two-layer feed-forward classifier
@@ -152,7 +150,6 @@ class BertTempProtClassifier(PreTrainedModel):
                 #logging.info('freeze_bert: {}'.format(freeze_bert)) 
                 #logging.info('param.requires_grad: {}'.format(param.requires_grad))
                 
-        #self._init_weights()
 
     def forward(self, input_ids, attention_mask):
         ''' Feed input to BERT and the classifier to compute logits.
@@ -176,22 +173,24 @@ class BertTempProtClassifier(PreTrainedModel):
 
 
 
-def initialize_model(device,train_dataloader,epochs,lr,adapter=None,fine_tuning=None):
+def initialize_model(device,train_dataloader,epochs,lr,adapter=None,fine_tuning=None,mode=None):
     """ Initialize the Bert Classifier, the optimizer and the learning rate scheduler."""
     
     if adapter == 'True':
         # Instantiate Bert Classifier
         logging.info(' --- Training with Adapters ---')
         logging.info('Not fine-tuning Bert, freezing Bert parameters')
-        bert_classifier = BertTempProtClassifier(adapter='True')
-        logging.info(bert_classifier)
+        bert_classifier = BertTempProtClassifier(adapter='True',mode=mode)
+        #logging.info(bert_classifier)
     else:
         if fine_tuning == 'True':
             logging.info('Fine-tuning Bert, unfreezing Bert parameters')
             bert_classifier = BertTempProtClassifier(freeze_bert='False')
+            #logging.info(bert_classifier)
         else:
             logging.info('Not fine-tuning Bert, freezing Bert parameters')
             bert_classifier = BertTempProtClassifier(freeze_bert='True')
+            #logging.info(bert_classifier)
     
 
     logging.info('Number of trainable parameters: {}'.format(sum(p.numel() for p in bert_classifier.parameters() if p.requires_grad)))

@@ -1,4 +1,4 @@
-from utilities import *
+from utils import *
 #from model import *
 from model import *
 
@@ -71,7 +71,6 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
 
 
     ## 4. Tokenization and DataPreparation
-    logging.info('TOKENIZATION:')
 
     # Rostlab/prot_bert requires that the AA are separated between each other with a space
     train_data[0]= [" ".join("".join(sample.split())) for sample in train_data[0]]
@@ -104,7 +103,7 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     print("Creating Train and Val Dataloader")
     # Create the DataLoader for our training set
     train_data = TensorDataset(train_inputs, train_masks, train_labels)
-    train_sampler = RandomSampler(train_data)
+    train_sampler = SequentialSampler(train_data)
     train_dataloader = DataLoader(train_data, sampler=train_sampler, batch_size=batch_size, num_workers = num_workers)
 
     # Create the DataLoader for our validation set
@@ -115,7 +114,7 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
 
     logging.info('Number of labels/target: {}'.format(len(np.unique(train_labels))))
 
-    return(train_dataloader,val_dataloader,y_val)
+    return (train_dataloader,val_dataloader,y_val)
 
 
      
@@ -128,7 +127,7 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
     device=device
 
     # Start training loop
-    logging.info("--TRAINING\n")
+    logging.info(" *** TRAINING*** \n")
     
     # Creating the config file of the model
     # model.config.to_json_file("config.json")
@@ -230,9 +229,8 @@ def train(model, device, train_dataloader, val_dataloader, valid_loss_min_input,
             # save checkpoint as best model
             save_ckp(checkpoint, True, checkpoint_path, best_model_path)
             valid_loss_min = val_loss
-    
-        # saving the model in hugginface format
-        model.save_pretrained('./best_model_hugginface/model_hugginface')
+            # saving the model in hugginface format
+            model.save_pretrained('./best_model_hugginface/model_hugginface')
 
         if adapter == 'True':
             #save only the adapter separately 
@@ -253,14 +251,12 @@ def evaluate(model, val_dataloader,device):
 
     # For each batch in our validation set...
     for batch in val_dataloader:
-        #logging.info('Batch size for evaluation {}'.format(len(batch)))
         # Load batch to GPU
         b_input_ids, b_attn_mask, b_labels = tuple(t.to(device) for t in batch)
 
         # Compute logits
         with torch.no_grad():
             logits = model(b_input_ids, b_attn_mask)
-            print('logits {}'.format(logits))
 
         # Compute loss
         loss = loss_fn(logits, b_labels)
@@ -268,7 +264,6 @@ def evaluate(model, val_dataloader,device):
 
         # Get the predictions
         preds = torch.argmax(logits, dim=1).flatten()
-        print('preds in the evaluation after argmax {}'.format(preds))
         #logits tensor([[-0.8502,  0.8427]], device='cuda:0')
         #preds in the evaluation after argmax tensor([1], device='cuda:0')
 
