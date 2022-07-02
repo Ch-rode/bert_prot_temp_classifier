@@ -120,7 +120,7 @@ def run(*argv):
                 train(model = model, optimizer=optimizer, scheduler=scheduler, train_dataloader = train_dataloader, val_dataloader = val_dataloader, start_epochs = start_epochs, epochs = n_epochs, valid_loss_min_input = valid_loss_min, evaluation = True, checkpoint_path = r"./checkpoint/current_checkpoint.pt", best_model_path = r"./best_model/best_model.pt",device=device, adapter='True')
 
         else:
-            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning=fine_tuning) 
+            bert_classifier, optimizer, scheduler = initialize_model(epochs=n_epochs,device=device,train_dataloader=train_dataloader,lr=lr,fine_tuning=fine_tuning,mode='train') 
         
             if args.train_first_run:
                 logging.info(' *** Training for first time ***')

@@ -110,8 +110,6 @@ class BertTempProtClassifier(PreTrainedModel):
         super().__init__(config)
 
 
-        self.bert = BertAdapterModel(config=config)
-
         self.D_in = 1024 #hidden size of Bert
         self.H = 512
         self.D_out = 2
