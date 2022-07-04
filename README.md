@@ -56,7 +56,7 @@ python run.py
 ```
 python run.py
 --mode val 
---val_threshold 0.2012 
+--val_threshold 0.3691
 --val_data TEST_cl_1 
 --val_batch_size 8 
 --num_workers 0
@@ -70,7 +70,7 @@ python run.py
 ```
 python run.py
 --mode test 
---val_threshold 0.2021 
+--val_threshold 0.3691 
 --test_data TEST_cl_1 
 --test_batch_size 8 
 --num_workers 0
