@@ -189,7 +189,7 @@ def run(*argv):
         threshold=args.pred_threshold
         num_workers=args.num_workers
 
-
+        data=pd.read_csv(data,header=None) 
         print('--Starting Inference for the data: {}'.format(data))
         print('--Using the best model weights from: {}'.format(best_model))
         
