@@ -1,4 +1,4 @@
-# classifier_python
+# BertTempProtClassifier
 
 
 [Hugginface](https://huggingface.co/Chrode/bert_prot_temp_classifier) 
