@@ -80,8 +80,7 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
     preds=[mappings[x] for x in preds] 
 
 
-    input_sequences = []
-    label_predicted = []
+
     f = open("classification.out","w")
 
     for index, item in enumerate(data):
@@ -89,9 +88,6 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
         print("Sequence to Classify: {} Class predicted: {}...".format(item[:5],preds[index]))
         #logging.info("Sequence to Classify: {} Class predicted: {}...".format(item[:5],preds[index]))
         item2=item.replace(" ", "")
-        print(item2)
-        input_sequences.append(item2)
-        label_predicted.append(preds[index])
         f.write(str(item2 + ',' + str(probs[index]) + preds[index]+',' +'\n'))
     
     return preds
