@@ -51,8 +51,8 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
 
     model.eval()
 
-    # Load the data to inference from
-    data=pd.read_csv(data,header=None)
+    # Load the data to inference from (must be a df in this point)
+    #data=pd.read_csv(data,header=None) 
     data=[" ".join("".join(sample.split())) for sample in data[0]]
     print("Data Check:", data[0])
     inputs, masks = preprocessing_for_bert(data,MAX_LEN)
