@@ -1,9 +1,10 @@
 # classifier_python
 
-If training for first time a model (not resume from checkpoints) add (Don't specify anything if you resume from checkpoints, `--start_epochs` is the last epoch processed) :
+If training for first time a model (not resume from checkpoints) add the following arguments:
 ```
 --train_first_run TRUE  
 ```
+Don't specify anything if you resume from checkpoints, only remember that `--start_epochs` is the last epoch totally processed.
 
 If training a model with adapters add for all the mode:
 
