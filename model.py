@@ -1,4 +1,3 @@
-from this import d
 from utils import *
 
 # Load the BERT tokenizer
