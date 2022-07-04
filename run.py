@@ -6,13 +6,7 @@ from testing import test
 from validation import validation
 
 
-""" python init.py --mode inference --data_path  /home/rodella/NUOVI_DATI/TEST_cl_1  --best_model_path /home/rodella/NUOVI_DATI/Classifier/ratio1/best_model/best_model.pt  --device cuda  --pred_threshold 0.7 --num_workers 0 --max_len=512
-"""
 
-""" python init.py --mode train --train_data sampledata --val_data sampledata --test_data sampledata --n_epochs 2 --learning_rate 0.001 --max_len 512 --batch_size 4 --num_workers 0 --start_epochs 0 --train_first_run TRUE
-"""
-
-'''python init.py --mode test --test_data sampledata --num_workers 0 --device cuda --lr 0.001'''
 
 def run(*argv):
 
