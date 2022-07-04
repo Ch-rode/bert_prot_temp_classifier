@@ -58,6 +58,7 @@ def test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold,adap
         bert_classifier = BertTempProtClassifier(freeze_bert='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
 
     # Tell PyTorch to run the model on GPU
+    #logging.info(bert_classifier)
     bert_classifier = bert_classifier.to(device)
 
 

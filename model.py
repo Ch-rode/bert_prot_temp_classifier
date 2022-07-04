@@ -113,6 +113,7 @@ class BertTempProtClassifier(PreTrainedModel):
         self.D_in = 1024 #hidden size of Bert
         self.H = 512
         self.D_out = 2
+
         
         if adapter == 'True':
             if mode == 'train':
@@ -120,16 +121,16 @@ class BertTempProtClassifier(PreTrainedModel):
                 # Add a new adapter
                 self.bert.add_adapter("tem_prot_adapter",set_active=True)
                 self.bert.train_adapter(["tem_prot_adapter"])
-            if mode == 'test' :
+            else:
                 self.bert = BertAdapterModel(config=config)
                 self.bert.load_adapter("./best_model_hugginface/final_adapter")
                 self.bert.set_active_adapters('tem_prot_adapter')
+
         else:
             if mode == 'train':
                 self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
-            if mode == 'test' :
+            else:
                 self.bert = BertModel(config=config)
-
 
  
         # Instantiate the classifier head with some two-layer feed-forward classifier
