@@ -7,17 +7,13 @@
 [Colab](https://colab.research.google.com/drive/19OPKXZJTO2ofd6_agS1nAj9-OSYZVz87?usp=sharing) #run it using chrome
 
 
-If training for first time a model (not resume from checkpoints) add the following arguments:
-```
---train_first_run TRUE  
-```
-Don't specify anything if you resume from checkpoints, only remember that `--start_epochs` is the last epoch totally processed.
 
-If training a model with adapters add for all the mode:
+
+If training a model with adapters add the following argument indipendently from the selected mode:
 
 ```
 --adapter True
---fine_tuning False
+
 ```
 
 If training a model with full-fine tuning add for all the mode:
@@ -32,43 +28,41 @@ If training a model with fine-tuning only the classification head:
 ```
 
 
+
+--resume_from_checkpoint True
+
 ###  TRAINING
 
 ```
 python run.py 
---mode train 
---train_data TEST_cl_1 
---val_data  TEST_cl_1  
---n_epochs 4
---learning_rate 5e-06 
---max_len 512 
---batch_size 16  
---num_workers 0 
+--mode train
+--train_data TRAIN_cl_1 
+--val_data VAL_cl_1 
 --start_epochs 0 
+--n_epochs 4 
+--batch_size 16 
+--learning_rate 5e-06 
+--num_workers 0
+--max_len 512 
 ```
+If tresume from checkpoint (not resume from checkpoints) add the following arguments:
+```
+--resume_from_checkpoint True
+```
+Remember that `--start_epochs` is the last epoch totally processed.
 
-### VALIDATION tuning the threshold 
+### VALIDATION 
 
 ```
 python run.py
---val_data data
---mode val 
---val_data TEST_cl_1 
---val_batch_size 8
+--val_data VAL_cl_1
+--batch_size 8
 --num_workers 0
-```
+--best_model Chrode/bert_prot_temp_classifier #from hugginface or by default the trained saved model './best_model_hugginface/model_hugginface'
 
-### VALIDATION using specified threshold
-
-```
-python run.py
---mode val 
---val_threshold 0.3691
---val_data TEST_cl_1 
---val_batch_size 8 
---num_workers 0
 
 ```
+If you want to do the validation with a desidered threshold add i.e. --threshold 0.3691, otherwise if you don't put the argument the code will find the best threshold tuned on validation data added.
 
 
 
@@ -77,13 +71,20 @@ python run.py
 ```
 python run.py
 --mode test 
---val_threshold 0.3691 
+--threshold 0.3691 
 --test_data TEST_cl_1 
---test_batch_size 8 
+--batch_size 8 
 --num_workers 0
+--best_model_path Chrode/bert_prot_temp_classifier
 
 ```
 
 ### INFERENCE  
+python run.py
+--inference_data data
+--threshold 0.3691
+--best_model_path Chrode/bert_prot_temp_classifier
+--num_workers 0 
+
 
 
