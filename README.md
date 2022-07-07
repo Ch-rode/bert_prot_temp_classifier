@@ -9,12 +9,12 @@ Demo on Colab (Running on Chrome): [Colab](https://colab.research.google.com/dri
 
 
 
-If training a model with **adapters** add the following argument indipendently from the selected mode: `--adapter True`
+* If training a model with **adapters** add the following argument indipendently from the selected mode: `--adapter True`, from [Adapter-Hub library](https://adapterhub.ml/) ![image](https://user-images.githubusercontent.com/61243245/177858361-b3d6b33e-f675-4eb0-834e-96c3933ed776.png)
 
-If training a model with **full-fine tuning** add for all the mode: `--fine_tuning True`
+* If training a model with **full-fine tuning** add for all the mode: `--fine_tuning True`
 
 
-If training a model with fine-tuning only the **classification head**: `--fine_tuning False`
+* If training a model with fine-tuning only the **classification head**: `--fine_tuning False`
 
 
 ###  TRAINING
