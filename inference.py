@@ -1,5 +1,5 @@
 from utils import *
-from model import  preprocessing_for_bert, BertTempProtClassifier, tokenizer
+from model import  preprocessing_for_bert, BertTempProtClassifier, tokenizer, BertTempProtAdapterClassifier
 
 
 def predict(model, dataloader,device):
@@ -29,10 +29,11 @@ def predict(model, dataloader,device):
 
     return probs
 
-def run_inference(data,best_model,device,threshold,num_workers,max_len):
+def run_inference(data,best_model,device,threshold,num_workers,max_len,adapter=None):
     """Perform full inference classification on a set of data"""
+
     set_seed(42)    # Set seed for reproducibility
-    logging.info('** INFERENCE ** ')
+    
     logging.info((f'Uploading the best_model model from {best_model}'))
     logging.info((f'Data to infere from {data}'))
     
@@ -45,13 +46,19 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
     MAX_LEN=max_len
  
     # using hugginface model saved
-    model = BertTempProtClassifier.from_pretrained(best_model)
+    if adapter == 'True':
+        model = BertTempProtAdapterClassifier.from_pretrained(best_model)
+    else:
+        model = BertTempProtClassifier.from_pretrained(best_model)
+
+    
     model = model.to(device)
 
 
     model.eval()
 
     # Load the data to inference from (must be a df in this point)
+    #the format of the file is ID, SEQUENCE 
     #data=pd.read_csv(data,header=None) 
     data=[" ".join("".join(sample.split())) for sample in data[0]]
     print("Data Check:", data[0])
@@ -83,12 +90,16 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len):
 
     f = open("classification.out","w")
 
+
+
     for index, item in enumerate(data):
         #print(data[i],preds[i])
         print("Sequence to Classify: {} Class predicted: {}...".format(item[:5],preds[index]))
         #logging.info("Sequence to Classify: {} Class predicted: {}...".format(item[:5],preds[index]))
         item2=item.replace(" ", "")
-        f.write(str(item2 + ',' + str(probs[index]) + preds[index]+',' +'\n'))
+        f.write(str(item2 + ',' + str(probs[index]) + ',' + preds[index] +'\n'))
+
+        print('All classification results saved in the classification.out file')
     
     return preds
 

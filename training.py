@@ -80,7 +80,7 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     print('Checking data prep: {}'.format(train_data.head()))
 
 
-    # Run function `preprocessing_for_bert` on the train set, validation set and test set
+    # Run function `preprocessing_for_bert` on the train set and validation set
     print('Tokenizing data...')
     train_inputs, train_masks = preprocessing_for_bert(train_data[1],MAX_LEN)
     val_inputs,val_masks = preprocessing_for_bert(val_data[1],MAX_LEN)
@@ -89,7 +89,7 @@ def data_prep(train_data,val_data,MAX_LEN,batch_size,num_workers):
     logging.info("Example and check of the tokenized data: {}".format(train_data[1][0],train_inputs[0],train_masks[0]))
 
 
-    ## 5 Create PyTorch DataLoader
+    ## Create PyTorch DataLoader
 
     # Training label
     y_train=train_data[2]

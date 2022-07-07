@@ -99,7 +99,7 @@ bert_config=BertTempProtConfig()
 class BertTempProtClassifier(PreTrainedModel):
     """Bert Model for Classification Tasks."""
     config_class = BertTempProtConfig
-    def __init__(self,config=bert_config, freeze_bert=None,adapter=None,mode=None): #tuning only the head
+    def __init__(self,config=bert_config, freeze_bert=None,mode=None): #tuning only the head
         """
          @param    bert: a BertModel object
          @param    classifier: a torch.nn.Module classifier
@@ -113,25 +113,16 @@ class BertTempProtClassifier(PreTrainedModel):
         self.H = 512
         self.D_out = 2
 
-        
-        if adapter == 'True':
-            if mode == 'train':
-                self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
-                # Add a new adapter
-                self.bert.add_adapter("tem_prot_adapter",set_active=True)
-                self.bert.train_adapter(["tem_prot_adapter"])
-            else:
-                self.bert = BertAdapterModel(config=config)
-                self.bert.load_adapter("./best_model_hugginface/final_adapter")
-                self.bert.set_active_adapters('tem_prot_adapter')
+        logging.info(f'Mode: {mode}')
 
+        if mode == 'train':
+            self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
+            logging.info('Self bert model from rostlab')
         else:
-            if mode == 'train':
-                self.bert = BertModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
-            else:
-                self.bert = BertModel(config=config)
+            self.bert = BertModel(config=config)
 
- 
+
+
         # Instantiate the classifier head with some two-layer feed-forward classifier
         self.classifier = nn.Sequential(
             nn.Linear(self.D_in, 512),
@@ -144,14 +135,77 @@ class BertTempProtClassifier(PreTrainedModel):
         if freeze_bert == 'True':
             for param in self.bert.parameters():
                 param.requires_grad = False
-                #logging.info('freeze_bert: {}'.format(freeze_bert)) 
-                #logging.info('param.requires_grad: {}'.format(param.requires_grad))
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
         if freeze_bert == 'False':
             for param in self.bert.parameters():
                 param.requires_grad = True
-                #logging.info('freeze_bert: {}'.format(freeze_bert)) 
-                #logging.info('param.requires_grad: {}'.format(param.requires_grad))
+                logging.info('freeze_bert: {}'.format(freeze_bert)) 
+                logging.info('param.requires_grad: {}'.format(param.requires_grad))
                 
+
+    def forward(self, input_ids, attention_mask):
+        ''' Feed input to BERT and the classifier to compute logits.
+         @param    input_ids (torch.Tensor): an input tensor with shape (batch_size,
+                       max_length)
+         @param    attention_mask (torch.Tensor): a tensor that hold attention mask
+                       information with shape (batch_size, max_length)
+         @return   logits (torch.Tensor): an output tensor with shape (batch_size,
+                       num_labels) '''
+         # Feed input to BERT
+        outputs = self.bert(input_ids=input_ids,
+                             attention_mask=attention_mask)
+         
+         # Extract the last hidden state of the token `[CLS]` for classification task
+        last_hidden_state_cls = outputs[0][:, 0, :]
+ 
+         # Feed input to classifier to compute logits
+        logits = self.classifier(last_hidden_state_cls)
+ 
+        return logits
+
+
+
+#Create the BertClassfier class
+class BertTempProtAdapterClassifier(PreTrainedModel):
+    """Bert Model for Classification Tasks."""
+    config_class = BertTempProtConfig
+    def __init__(self,config=bert_config, freeze_bert=None,mode=None): #tuning only the head
+        """
+         @param    bert: a BertModel object
+         @param    classifier: a torch.nn.Module classifier
+         @param    freeze_bert (bool): Set `False` to fine-tune the BERT model
+        """
+        #super(BertClassifier, self).__init__()
+        super().__init__(config)
+
+
+        self.D_in = 1024 #hidden size of Bert
+        self.H = 512
+        self.D_out = 2
+
+        logging.info(f'Mode: {mode}')
+
+        if mode == 'train':
+            self.bert = BertAdapterModel.from_pretrained('Rostlab/prot_bert_bfd',config=config)
+            # Add a new adapter
+            self.bert.add_adapter("tem_prot_adapter",set_active=True)
+            self.bert.train_adapter(["tem_prot_adapter"])
+        else:
+            self.bert = BertAdapterModel(config=config)
+            self.bert.load_adapter("./best_model_hugginface/final_adapter")
+            self.bert.set_active_adapters('tem_prot_adapter')
+
+
+ 
+        # Instantiate the classifier head with some two-layer feed-forward classifier
+        self.classifier = nn.Sequential(
+            nn.Linear(self.D_in, 512),
+            nn.Tanh(),
+            nn.Linear(512, self.D_out),
+            nn.Tanh()
+        )
+ 
 
     def forward(self, input_ids, attention_mask):
         ''' Feed input to BERT and the classifier to compute logits.
@@ -182,17 +236,17 @@ def initialize_model(device,train_dataloader,epochs,lr,adapter=None,fine_tuning=
         # Instantiate Bert Classifier
         logging.info(' --- Training with Adapters ---')
         logging.info('Not fine-tuning Bert, freezing Bert parameters')
-        bert_classifier = BertTempProtClassifier(adapter='True',mode=mode)
-        #logging.info(bert_classifier)
+        bert_classifier = BertTempProtAdapterClassifier(mode=mode)
+        logging.info(bert_classifier)
     else:
         if fine_tuning == 'True':
             logging.info('Fine-tuning Bert, unfreezing Bert parameters')
             bert_classifier = BertTempProtClassifier(freeze_bert='False',mode=mode)
-            #logging.info(bert_classifier)
+            logging.info(bert_classifier)
         else:
             logging.info('Not fine-tuning Bert, freezing Bert parameters')
             bert_classifier = BertTempProtClassifier(freeze_bert='True',mode=mode)
-            #logging.info(bert_classifier)
+            logging.info(bert_classifier)
     
 
     logging.info('Number of trainable parameters: {}'.format(sum(p.numel() for p in bert_classifier.parameters() if p.requires_grad)))

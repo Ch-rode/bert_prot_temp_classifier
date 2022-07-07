@@ -9,6 +9,7 @@ from matplotlib import rc
 from collections import Counter
 import random
 import time
+import copy
 
 import torch
 import torchvision.transforms as transforms
@@ -71,6 +72,7 @@ def set_seed(seed_value=42):
     np.random.seed(seed_value)
     torch.manual_seed(seed_value)
     torch.cuda.manual_seed_all(seed_value)
+
 
 def numel(m: torch.nn.Module, only_trainable: bool = False):
     """

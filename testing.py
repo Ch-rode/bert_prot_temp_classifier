@@ -1,4 +1,3 @@
-
 from utils import *
 from model import *
 from training import *
@@ -7,7 +6,8 @@ from inference import predict
 
 
 def evaluate_test(model, test_dataloader, device):
-    """After the completion of each training epoch, measure the model's performance on our validation set."""
+    """After the completion of each training epoch, measure the model's performance on our set."""
+
     model.eval()
     loss_fn = nn.CrossEntropyLoss()
 
@@ -45,17 +45,22 @@ def evaluate_test(model, test_dataloader, device):
     return probs, test_loss 
 
 
-def test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold,adapter=None,mode=None,):
+def test(test_data,num_workers,device,MAX_LEN,test_batch_size,best_model,val_threshold,adapter=None,mode=None,):
     """Evaluate the Bert classifier on Test set"""
     logging.info(' ** Evaluation on the TEST SET **')
+
+    print(f'Using as testing data: {test_data}')
+    print(f'Using as best model: {best_model}')
+    logging.info(f'Using as testing data: {test_data}')
+    logging.info(f'Using as best model: {best_model}')
 
 
     if adapter == 'True':
         # Instantiate Bert Classifier
         logging.info(' --- Testing model with Adapters ---')
-        bert_classifier = BertTempProtClassifier(freeze_bert='True',adapter='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
+        bert_classifier = BertTempProtAdapterClassifier(adapter='True',mode='test').from_pretrained(best_model)
     else:
-        bert_classifier = BertTempProtClassifier(freeze_bert='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
+        bert_classifier = BertTempProtClassifier(freeze_bert='True',mode='test').from_pretrained(best_model)
 
     # Tell PyTorch to run the model on GPU
     #logging.info(bert_classifier)
@@ -65,7 +70,6 @@ def test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold,adap
     # Load test Data
     # the format of the test file is ID, SEQUENCE, LABEL
     test_data = pd.read_csv(test_data,header=None,sep=',')
-    import copy
     sequences = copy.copy(test_data[1])
 
     # Display 5 samples from the test data
@@ -104,9 +108,10 @@ def test(test_data,num_workers,device,MAX_LEN,test_batch_size,val_threshold,adap
             writer.writerow(row)
 
     # Evaluate the Bert classifier and find the optimal threshold value using ROC
-    logging.info('ROC AND METRICS ON TEST DATA, by best model')
+    logging.info('ROC AND METRICS ON TEST DATA, using best model')
     evaluate_roc_testdata(all_probs, y_test,val_threshold)
 
+    print('Test output saved in the test.out file')
     print('--End evaluation')
 
     return True

@@ -1,20 +1,26 @@
-
 from utils import *
 from testing import predict
 from training import preprocessing_for_bert
-from model import BertTempProtClassifier
+from model import BertTempProtClassifier, BertTempProtAdapterClassifier
 
 
 
-def validation(val_data,val_batch_size, device, num_workers, adapter=None,val_threshold=None,):
+def validation(val_data,val_batch_size, device, num_workers, best_model, adapter=None,val_threshold=None,):
     logging.info( ' *** VALIDATION MODE ***')
+    print('--Start validation')
+
+
+    print(f'Using as validation data: {val_data}')
+    print(f'Using as best model: {best_model}')
+    logging.info(f'Using as validation data: {val_data}')
+    logging.info(f'Using as best model: {best_model}')
     
     if adapter == 'True':
         # Instantiate Bert Classifier
-        logging.info(' --- Testing model with Adapters ---')
-        bert_classifier = BertTempProtClassifier(freeze_bert='True',adapter='True',mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
+        logging.info(' --- Using model with Adapters ---')
+        bert_classifier = BertTempProtAdapterClassifier(adapter='True',mode='test').from_pretrained(best_model)
     else:
-        bert_classifier = BertTempProtClassifier(freeze_bert='True', mode='test').from_pretrained('./best_model_hugginface/model_hugginface')
+        bert_classifier = BertTempProtClassifier(freeze_bert='True', mode='test').from_pretrained(best_model)
 
     # Tell PyTorch to run the model on GPU
     bert_classifier = bert_classifier.to(device)
@@ -24,7 +30,7 @@ def validation(val_data,val_batch_size, device, num_workers, adapter=None,val_th
 
     logging.info('VAL SET distribution: {}'.format(Counter(val_data[2])))
 
-    print('--Tokenizing val data...')
+    print('Tokenizing val data...')
     # Run `preprocessing_for_bert` on the test set
     val_data[1]=[" ".join("".join(sample.split())) for sample in val_data[1]]
     val_inputs, val_masks = preprocessing_for_bert(val_data[1],MAX_LEN=512)
@@ -41,17 +47,20 @@ def validation(val_data,val_batch_size, device, num_workers, adapter=None,val_th
     val_sampler =  SequentialSampler(val_dataset)
     val_dataloader = DataLoader(val_dataset, sampler=val_sampler, batch_size=val_batch_size,  num_workers = num_workers)
 
-    print('--Start validation')
-
+   
     # Compute predicted probabilities on the validation set
     probs = predict(bert_classifier, val_dataloader, device)
 
     if val_threshold:
-        logging.info(f'Specified Threshold to use in the validation: {val_threshold}')
+        logging.info(f'Using specified Threshold to be used in the validation: {val_threshold}')
+        print(f'Using specified Threshold to be used in the validation: {val_threshold}')
         evaluate_roc_valdata(probs, y_val, val_threshold)
     else: 
-        logging.info('Threshold to be tuned')
+        logging.info('Doing threshold tuning')
+        print('Doing threshold tuning')
         evaluate_roc_valdata(probs, y_val)
+
+    print('--End validation')
 
 
         
