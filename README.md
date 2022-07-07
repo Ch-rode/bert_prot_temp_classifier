@@ -1,35 +1,21 @@
 # BertTempProtClassifier
 
 
-[Hugginface](https://huggingface.co/Chrode/bert_prot_temp_classifier) 
+[Hugginface Model Repository](https://huggingface.co/Chrode/bert_prot_temp_classifier) 
+In the Hugginface-Hub the model is a only-classification-head tuned model. 
 
 
-[Colab](https://colab.research.google.com/drive/19OPKXZJTO2ofd6_agS1nAj9-OSYZVz87?usp=sharing) #run it using chrome
-
-
-
-
-If training a model with adapters add the following argument indipendently from the selected mode:
-
-```
---adapter True
-
-```
-
-If training a model with full-fine tuning add for all the mode:
-```
---fine_tuning True
-```
-
-
-If training a model with fine-tuning only the classification head:
-```
---fine_tuning False
-```
+Demo on Colab (Running on Chrome): [Colab](https://colab.research.google.com/drive/19OPKXZJTO2ofd6_agS1nAj9-OSYZVz87?usp=sharing) 
 
 
 
---resume_from_checkpoint True
+If training a model with **adapters** add the following argument indipendently from the selected mode: `--adapter True`
+
+If training a model with **full-fine tuning** add for all the mode: `--fine_tuning True`
+
+
+If training a model with fine-tuning only the **classification head**: `--fine_tuning False`
+
 
 ###  TRAINING
 
@@ -45,10 +31,7 @@ python run.py
 --num_workers 0
 --max_len 512 
 ```
-If tresume from checkpoint (not resume from checkpoints) add the following arguments:
-```
---resume_from_checkpoint True
-```
+If resume from checkpoint add the following arguments: `--resume_from_checkpoint True`. It will load the current checkpoints from the default directory.
 Remember that `--start_epochs` is the last epoch totally processed.
 
 ### VALIDATION 
@@ -59,10 +42,9 @@ python run.py
 --batch_size 8
 --num_workers 0
 --best_model Chrode/bert_prot_temp_classifier #from hugginface or by default the trained saved model './best_model_hugginface/model_hugginface'
-
-
 ```
-If you want to do the validation with a desidered threshold add i.e. --threshold 0.3691, otherwise if you don't put the argument the code will find the best threshold tuned on validation data added.
+
+If you want to do the validation with a desidered **threshold** add i.e. `--threshold 0.3691`, otherwise if you don't put the argument the code will find the best threshold tuned on validation data added.
 
 
 
@@ -76,15 +58,17 @@ python run.py
 --batch_size 8 
 --num_workers 0
 --best_model_path Chrode/bert_prot_temp_classifier
-
 ```
 
-### INFERENCE  
+### INFERENCE 
+
+```
 python run.py
 --inference_data data
 --threshold 0.3691
 --best_model_path Chrode/bert_prot_temp_classifier
 --num_workers 0 
+```
 
 
 
