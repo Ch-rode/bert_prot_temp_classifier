@@ -88,7 +88,7 @@ def run_inference(data,best_model,device,threshold,num_workers,max_len,adapter=N
 
 
 
-    f = open("classification.out","w")
+    f = open("classification.out","a")
 
 
 
