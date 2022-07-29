@@ -58,7 +58,7 @@ def test(test_data,num_workers,device,MAX_LEN,test_batch_size,best_model,val_thr
     if adapter == 'True':
         # Instantiate Bert Classifier
         logging.info(' --- Testing model with Adapters ---')
-        bert_classifier = BertTempProtAdapterClassifier(adapter='True',mode='test').from_pretrained(best_model)
+        bert_classifier = BertTempProtAdapterClassifier(mode='test').from_pretrained(best_model)
     else:
         bert_classifier = BertTempProtClassifier(freeze_bert='True',mode='test').from_pretrained(best_model)
 

@@ -18,8 +18,7 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.utils.data import TensorDataset, DataLoader, RandomSampler, SequentialSampler
 
-from transformers import BertTokenizer,BertModel, AutoConfig, BertModel,AutoModel
-from transformers.adapters import BertAdapterModel
+from transformers import BertTokenizer,BertModel, BertAdapterModel, AutoConfig,  BertAdapterModel, BertModel,AutoModel
 from transformers import AdamW, get_linear_schedule_with_warmup
 
 from sklearn.metrics import accuracy_score, roc_curve, auc, classification_report, confusion_matrix, precision_recall_curve, matthews_corrcoef

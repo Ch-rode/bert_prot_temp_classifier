@@ -1,4 +1,3 @@
-from traitlets import default
 from utils import *
 from training import train, data_prep, training_setup
 from model import initialize_model
